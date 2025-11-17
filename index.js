@@ -12,9 +12,23 @@ import subCategoryRouter from "./routes/subCategory.route.js";
 
 
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://binkeyit-fe.vercel.app",
+];
+
 app.use(cors({
-    origin:"*",
-}))
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("CORS: Not allowed by policy"), false);
+  },
+  credentials: true,
+}));
 app.use(express.json())
 app.use(express());
 app.use(cookieParser());
