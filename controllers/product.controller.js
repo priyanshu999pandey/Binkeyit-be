@@ -423,3 +423,102 @@ export const getAllProductByCategoryUsingIdController = async(req,res)=>{
     });
    }
 }
+
+export const getSearchedProduct = async(req,res)=>{
+  try {
+
+    let {search,page,limit} = req.body || {};
+
+    if(!page){
+      page = 1
+    }
+
+    if(!limit){
+      limit=10
+    }
+
+    const skip = (page-1)*limit;
+
+    const query = search?{
+       $text:{
+        $search:search
+       }
+    } :{}
+
+    const [data,dataCount] = await Promise.all([
+      ProductModel.find(query).sort({createdAt:-1}).skip(skip).limit(limit).populate('category').populate('subCategory'),
+      ProductModel.countDocuments(query)
+    ])
+
+    return res.status(200).json({
+      message:"Product fetched successfully",
+      error:false,
+      success:true,
+      limit:limit,
+      totalCount:dataCount,
+      totalPage :Math.ceil(dataCount/limit),
+      page:page,
+      data:data,
+      
+    })
+    
+  } catch (error) {
+    console.error("Controller Error:", error);
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+      error: true,
+      success: false,
+    });
+  }
+}
+
+
+// export const getSearchedProduct = async (req, res) => {
+//   try {
+//     // grab from req.body (not "req,body")
+//     let { search, page, limit } = req.body || {};
+
+//     // convert to numbers and set sane defaults
+//     page = Number(page) || 1;
+//     limit = Number(limit) || 10;
+
+//     const skip = (page - 1) * limit;
+
+//     // if you want text search, make sure you have a text index on the fields in the ProductModel
+//     const query = search
+//       ? { $text: { $search: search } }
+//       : {};
+
+//     // IMPORTANT: await Promise.all so you get actual results (not Promises)
+//     const [data, dataCount] = await Promise.all([
+//       ProductModel.find(query)
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(limit)
+//         // populate properly (can call populate multiple times)
+//         .populate('category')
+//         .populate('subCategory'),
+//       ProductModel.countDocuments(query)
+//     ]);
+
+//     return res.status(200).json({
+//       message: "Product fetched successfully",
+//       error: false,
+//       success: true,
+//       limit,
+//       page,
+//       totalCount: dataCount,
+//       totalPage: limit > 0 ? Math.ceil(dataCount / limit) : 0,
+//       data,
+      
+//     });
+
+//   } catch (error) {
+//     console.error("Controller Error:", error);
+//     return res.status(500).json({
+//       message: error.message || "Internal Server Error",
+//       error: true,
+//       success: false,
+//     });
+//   }
+// };
