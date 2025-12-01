@@ -21,6 +21,21 @@ export const addToCartItemController = async (req, res) => {
         })
     }
 
+    const isItemAlreadyAdded = await CartProductModel.findOne({
+       userId,
+       productId
+    })
+    
+    console.log("isItemAlreadyAdded",isItemAlreadyAdded)
+
+    if(isItemAlreadyAdded){
+      return res.status(400).json({
+        message:"Item Already Added",
+        success:false,
+        error:true,
+      })
+    }
+
     const  cartItem = await CartProductModel.create({
          productId:productId,
          userId:userId
@@ -33,7 +48,7 @@ export const addToCartItemController = async (req, res) => {
     })
 
     return res.status(201).json({
-        message:"Item added successfully",
+        message:"Added To cart",
         error:false,
         success:true,
     })
@@ -76,7 +91,7 @@ export const getCartItemController = async(req,res)=>{
          message:"Get cartData successfully",
          error:false,
          success:true,
-         Data:cartData
+         cartItems:cartData
       })
 
 
@@ -88,4 +103,74 @@ export const getCartItemController = async(req,res)=>{
       success: false,
     });
   }
+}
+
+export const updateCartItemQtyController = async(req,res)=>{
+  try {
+    const userId = req.userId
+    const {_id,qty} = req.body
+
+    if(!_id || !qty){
+      return res.status(400).json({
+        message:"provide _id, qty",
+        success:false,
+        error:true
+      })
+    }
+
+    const updateQty = await CartProductModel.updateOne({
+      _id:_id  
+    },{
+      quantity:qty
+    })
+
+     return res.status(200).json({
+       message:"quantity updated sucessfully",
+       success:true,
+       error:false,
+       data:updateQty
+     })
+
+  } catch (error) {
+     console.log("Controller Error:", error);
+     return res.status(500).json({
+      message: error.message || "Internal Server Error",
+      error: true,
+      success: false,
+    });
+  }
+}
+
+export const deleteCartItemQtyController = async(req,res)=>{
+   try {
+    const userId = req.userId;
+    console.log("id--",req.body);
+
+    const {id} = req.body;
+
+    if(!id){
+      return res.status(400).json({
+        message:"Item not found",
+        success:false,
+        error:true,
+      })
+    }
+
+    const deleteCartItem = await CartProductModel.deleteOne({_id :id, userId:userId})
+
+    return res.status(200).json({
+      message:"Item removed",
+      error:false,
+      success:true,
+      data:deleteCartItem
+    })
+     
+   } catch (error) {
+     console.log("Controller Error:", error);
+     return res.status(500).json({
+      message: error.message || "Internal Server Error",
+      error: true,
+      success: false,
+    });
+   }
 }
